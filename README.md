@@ -1,7 +1,7 @@
 zbxutils
 ======
 
-Zbxutils is a small/simple library for interacting with Zabbix agents and servers. At the moment it marshals and unmarshals data according to what Zabbix expects.
+Zbxutils is a small/simple library for interacting with Zabbix agents and servers. At the moment it marshals and unmarshals data according to the protocol Zabbix expects.
 
 License
 =======
@@ -15,6 +15,7 @@ Installation
 Documentation
 =============
 [GoDoc](http://godoc.org/github.com/sfreiberg/zbxutils)
+
 [Zabbix Protocol](https://www.zabbix.com/documentation/2.2/manual/appendix/items/activepassive)
 
 Example
