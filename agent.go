@@ -83,13 +83,21 @@ func (a *Agent) Ping() (bool, error) {
 // Calls agent.hostname on the zabbix agent and returns the result.
 func (a *Agent) Hostname() (string, error) {
 	payload, err := a.Get(HostnameKey)
-	return string(payload.Data), err
+	if err != nil {
+		return "", err
+	}
+
+	return string(payload.Data), nil
 }
 
 // Calls agent.version on the zabbix host and returns the result.
 func (a *Agent) Version() (string, error) {
 	payload, err := a.Get(VersionKey)
-	return string(payload.Data), err
+	if err != nil {
+		return "", err
+	}
+
+	return string(payload.Data), nil
 }
 
 // Join host and port
