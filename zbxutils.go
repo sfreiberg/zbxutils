@@ -27,7 +27,8 @@ type Payload struct {
 	Data    []byte
 }
 
-// Create a payload from any io.Reader.
+// Create a payload from any io.Reader. Returns a partial payload even if
+// it throws an error. This is required for debugging.
 func NewPayloadFromReader(reader io.Reader) (*Payload, error) {
 	payload := &Payload{
 		Header:  make([]byte, 5),
@@ -37,37 +38,37 @@ func NewPayloadFromReader(reader io.Reader) (*Payload, error) {
 	// Read and validate the header
 	n, err := reader.Read(payload.Header)
 	if err != nil {
-		return nil, err
+		return payload, err
 	}
 	if n != 5 {
-		return nil, InvalidHeader
+		return payload, InvalidHeader
 	}
 	if !payload.ValidHeader() {
-		return nil, InvalidHeader
+		return payload, InvalidHeader
 	}
 
 	// Read and validate the DataLen
 	n, err = reader.Read(payload.DataLen)
 	if err != nil {
-		return nil, err
+		return payload, err
 	}
 
 	if n != 8 {
-		return nil, InvalidDataLen
+		return payload, InvalidDataLen
 	}
 
 	payload.Data = make([]byte, payload.DataLength())
 	n, err = reader.Read(payload.Data)
 	if err != nil {
-		return nil, err
+		return payload, err
 	}
 
 	if uint64(n) != payload.DataLength() {
-		return nil, InvalidDataLen
+		return payload, InvalidDataLen
 	}
 
 	if !payload.ValidData() {
-		return nil, InvalidData
+		return payload, InvalidData
 	}
 
 	return payload, nil
