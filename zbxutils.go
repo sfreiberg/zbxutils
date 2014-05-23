@@ -13,11 +13,9 @@ import (
 )
 
 var (
-	Header         = []byte("ZBXD\x01")            // Standard Zabbix header
-	NotSupported   = []byte("ZBX_NOTSUPPORTED")    // Not Supported response
-	InvalidHeader  = errors.New("Invalid Header")  // Invalid header error
-	InvalidDataLen = errors.New("Invalid DataLen") // Invalid datalen error
-	InvalidData    = errors.New("Invalid Data")    // Invalid data error
+	Header        = []byte("ZBXD\x01")           // Standard Zabbix header
+	NotSupported  = []byte("ZBX_NOTSUPPORTED")   // Not Supported response
+	InvalidHeader = errors.New("Invalid Header") // Invalid header error
 )
 
 // Payload is the structure that Zabbix uses to communicate.
@@ -36,42 +34,24 @@ func NewPayloadFromReader(reader io.Reader) (*Payload, error) {
 	}
 
 	// Read and validate the header
-	n, err := reader.Read(payload.Header)
+	_, err := io.ReadFull(reader, payload.Header)
 	if err != nil {
 		return payload, err
 	}
-	if n != 5 {
-		return payload, InvalidHeader
-	}
+
 	if !payload.ValidHeader() {
 		return payload, InvalidHeader
 	}
 
 	// Read and validate the DataLen
-	n, err = reader.Read(payload.DataLen)
+	_, err = io.ReadFull(reader, payload.DataLen)
 	if err != nil {
 		return payload, err
-	}
-
-	if n != 8 {
-		return payload, InvalidDataLen
 	}
 
 	payload.Data = make([]byte, payload.DataLength())
-	n, err = reader.Read(payload.Data)
-	if err != nil {
-		return payload, err
-	}
-
-	if uint64(n) != payload.DataLength() {
-		return payload, InvalidDataLen
-	}
-
-	if !payload.ValidData() {
-		return payload, InvalidData
-	}
-
-	return payload, nil
+	_, err = io.ReadFull(reader, payload.Data)
+	return payload, err
 }
 
 // Create a new Payload from a []byte.

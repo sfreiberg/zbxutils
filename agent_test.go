@@ -75,6 +75,22 @@ func TestAgentUnsupported(t *testing.T) {
 	fmt.Printf("Unsupported test: PASS (%s)\n", fakeKey)
 }
 
+func TestAgentLargePayload(t *testing.T) {
+	agent := newAgent(t)
+	key := "vfs.fs.discovery"
+
+	payload, err := agent.Get(key)
+	if err != nil {
+		t.Fatal("An error was thrown when asking for a larger request:", err)
+	}
+
+	if !payload.Valid() {
+		t.Fatal("Payload wasn't valid")
+	}
+
+	fmt.Printf("Large payload test: PASS (%s)\n", key)
+}
+
 func newAgent(t *testing.T) *Agent {
 	var err error
 	host := DefaultAgentHost

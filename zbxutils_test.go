@@ -2,6 +2,7 @@ package zbxutils
 
 import (
 	"bytes"
+	"io"
 	"testing"
 )
 
@@ -58,7 +59,7 @@ func TestInvalidHeader(t *testing.T) {
 func TestInvalidDataLen(t *testing.T) {
 	buffer := bytes.NewBuffer(invalidDataLen)
 	_, err := NewPayloadFromReader(buffer)
-	if err != InvalidDataLen {
+	if err != io.ErrUnexpectedEOF {
 		t.Fatal("Didn't catch the invalid data length")
 	}
 }
