@@ -63,3 +63,31 @@ func TestInvalidDataLen(t *testing.T) {
 		t.Fatal("Didn't catch the invalid data length")
 	}
 }
+
+func TestHugeDataLen(t *testing.T) {
+	// A peer claiming an enormous payload must not make us allocate it.
+	b := append([]byte(nil), Header...)
+	b = append(b, 0, 0, 0, 0, 0, 0, 0, 0x40) // 1<<62
+	b = append(b, "abc"...)
+	p, err := NewPayloadFromReader(bytes.NewBuffer(b))
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("err = %v, want io.ErrUnexpectedEOF", err)
+	}
+	if string(p.Data) != "abc" {
+		t.Fatalf("partial data = %q, want %q", p.Data, "abc")
+	}
+
+	b[len(Header)+7] = 0xff // > MaxInt64
+	if _, err := NewPayloadFromReader(bytes.NewBuffer(b)); err != io.ErrUnexpectedEOF {
+		t.Fatalf("err = %v, want io.ErrUnexpectedEOF", err)
+	}
+}
+
+func TestNewPayloadFromDataDoesNotAliasHeader(t *testing.T) {
+	p := NewPayloadFromData([]byte("x"))
+	p.Header[0] = 'X'
+	if Header[0] != 'Z' {
+		Header[0] = 'Z'
+		t.Fatal("modifying a payload header changed the package-level Header")
+	}
+}

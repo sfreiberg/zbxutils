@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math"
 )
 
 var (
@@ -49,15 +50,29 @@ func NewPayloadFromReader(reader io.Reader) (*Payload, error) {
 		return payload, err
 	}
 
-	payload.Data = make([]byte, payload.DataLength())
-	_, err = io.ReadFull(reader, payload.Data)
-	return payload, err
+	// DataLen comes from the remote side, so don't allocate it up front: a
+	// bogus or hostile length would panic (len out of range) or exhaust
+	// memory. Read only as much as actually arrives instead.
+	n := payload.DataLength()
+	if n > math.MaxInt64 {
+		return payload, io.ErrUnexpectedEOF
+	}
+	var buf bytes.Buffer
+	read, err := io.Copy(&buf, io.LimitReader(reader, int64(n)))
+	payload.Data = buf.Bytes()
+	if err != nil {
+		return payload, err
+	}
+	if uint64(read) != n {
+		return payload, io.ErrUnexpectedEOF
+	}
+	return payload, nil
 }
 
 // Create a new Payload from a []byte.
 func NewPayloadFromData(data []byte) *Payload {
 	p := &Payload{
-		Header:  Header,
+		Header:  bytes.Clone(Header), // don't alias the package-level Header
 		DataLen: make([]byte, 8),
 		Data:    data,
 	}
