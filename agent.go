@@ -3,6 +3,7 @@ package zbxutils
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"time"
@@ -52,7 +53,7 @@ func (a *Agent) GetWithTimeout(key string, timeout time.Duration) (*Payload, err
 	}
 	defer conn.Close()
 
-	_, err = fmt.Fprintf(conn, key)
+	_, err = io.WriteString(conn, key)
 	if err != nil {
 		return nil, err
 	}

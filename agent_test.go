@@ -2,10 +2,12 @@ package zbxutils
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Defaults to testing localhost and port 10050. If you want to specify the
@@ -107,5 +109,15 @@ func newAgent(t *testing.T) *Agent {
 		}
 	}
 
-	return NewAgentHostPort(host, port)
+	agent := NewAgentHostPort(host, port)
+
+	// These tests talk to a real Zabbix agent; skip them when none is
+	// reachable (e.g. in CI).
+	conn, err := net.DialTimeout("tcp", agent.hostPort(), time.Second)
+	if err != nil {
+		t.Skipf("no Zabbix agent reachable at %s: %v", agent.hostPort(), err)
+	}
+	conn.Close()
+
+	return agent
 }
